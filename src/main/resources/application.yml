@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: HPassBook
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/passbook?characterEncoding=utf-8&autoReconnect=true&serverTimezone=UTC&useSSL=false
+    username: root
+    password: root
+  kafka:
+    bootstrap-servers: 192.168.142.101:9092
+    consumer:
+      group-id: passbook
+    listener:
+      concurrency: 4
+
+hbase:
+  config:
+    hbase.zookeeper.quorum: 192.168.142.101,192.168.142.102,192.168.142.103
+    hbase.zookeeper.port: 2181
+    hbase.zookeeper.znode: /hbase
+    fs.defaultFS: hdfs://server101:9000
+
+server:
+  port: 8082
+
+logging:
+  file: HPassbook.log
+  level:
+    root: warn
