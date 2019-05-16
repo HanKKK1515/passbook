@@ -90,7 +90,7 @@ public class Constants {
     /**
      * <h2>feedback hbase table</h2>
      */
-    public class Feedback {
+    public class FeedbackTable {
         /** feedback hbase 表名 */
         public static final String TABLE_NAME = "pb:feedback";
         /** 信息列簇 */
