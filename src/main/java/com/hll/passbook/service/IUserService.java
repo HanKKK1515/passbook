@@ -9,9 +9,8 @@ import com.hll.passbook.vo.User;
 public interface IUserService {
     /**
      * <h2>创建用户</h2>
-     * @param user {@link: User}
-     * @return {@link: Response}
-     * @throws Exception
+     * @param user {@link User}
+     * @return {@link Response}
      */
     Response createUser(User user) throws Exception;
 }

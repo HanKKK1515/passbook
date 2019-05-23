@@ -71,7 +71,7 @@ public class Constants {
      * <h2>pass hbase table</h2>
      */
     public class PassTable {
-        /** pass hbase 表明 */
+        /** pass hbase 表名 */
         public static final String TABLE_NAME = "pb:pass";
         /** 信息列簇 */
         public static final String FAMILY_I = "i";

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PassTemplateInfo extends PassTemplate {
+public class PassTemplateInfo {
     /** 优惠券模板 */
     private PassTemplate passTemplate;
 

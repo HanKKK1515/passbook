@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 public class GlobalExceptionHandle {
     @ResponseBody
     @ExceptionHandler(value = Exception.class)
-    public ErrorInfo<String> errorHandle(HttpServletRequest request, Exception exception) throws Exception {
+    public ErrorInfo<String> errorHandle(HttpServletRequest request, Exception exception) {
         ErrorInfo<String> errorInfo = new ErrorInfo<>();
         errorInfo.setCode(ErrorInfo.ERROR);
         errorInfo.setMessage(exception.getMessage());

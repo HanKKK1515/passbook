@@ -26,7 +26,7 @@ public class PassTemplate {
     /** 优惠券背景色 */
     private Integer background;
 
-    /** 优惠券最大个数限制 */
+    /** 优惠券最大个数限制，无限制为-1 */
     private Long limit;
     /** 优惠券开始时间 */
     private Date start;

@@ -22,7 +22,6 @@ public class Response {
 
     /**
      * <h2>正确的响应构造函数</h2>
-     * @param data
      */
     public Response(Object data) {
         this.data = data;
@@ -30,7 +29,7 @@ public class Response {
 
     /**
      * <h2>空响应</h2>
-     * @return
+     * @return {@link Response}
      */
     public static Response success() {
         return new Response();
@@ -38,8 +37,8 @@ public class Response {
 
     /**
      * <h2>错误响应</h2>
-     * @param errorMsg
-     * @return
+     * @param errorMsg 错误信息
+     * @return {@link Response}
      */
     public static Response failure(String errorMsg) {
         return new Response(-1, errorMsg, null);

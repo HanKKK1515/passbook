@@ -23,6 +23,7 @@ public class PassRowMapper implements RowMapper<Pass> {
     private static byte[] TOKEN = Constants.PassTable.TOKEN.getBytes();
     private static byte[] ASSIGNED_DATE = Constants.PassTable.ASSIGNED_DATE.getBytes();
     private static byte[] CON_DATE = Constants.PassTable.CON_DATE.getBytes();
+
     @Override
     public Pass mapRow(Result result, int i) throws Exception {
         Pass pass = new Pass();

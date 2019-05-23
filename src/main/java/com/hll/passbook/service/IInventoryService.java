@@ -9,8 +9,7 @@ public interface IInventoryService {
     /**
      * <h2>根据 UserId 获取优惠券库存信息</h2>
      * @param userId 用户id
-     * @return {@link: Response}
-     * @throws Exception
+     * @return {@link Response}
      */
     Response getInventoryInfo(Long userId) throws Exception;
 }

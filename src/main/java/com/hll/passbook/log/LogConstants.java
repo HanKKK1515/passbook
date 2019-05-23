@@ -7,24 +7,27 @@ public class LogConstants {
     /** 用户动作名称 */
     public class ActionName {
         /** 用户查看优惠券信息 */
-        public static final String user_pass_info = "UserPassInfo";
+        public static final String USER_PASS_INFO = "UserPassInfo";
 
         /** 用户查看已使用的优惠券信息 */
-        public static final String user_used_pass_info = "UserUsedPassInfo";
+        public static final String USER_USED_PASS_INFO = "UserUsedPassInfo";
 
         /** 用户使用优惠券 */
-        public static final String user_use_pass = "UserUsePass";
+        public static final String USER_USE_PASS = "UserUsePass";
 
         /** 用户获取库存信息 */
-        public static final String inventory_info = "InventoryInfo";
+        public static final String INVENTORY_INFO = "InventoryInfo";
 
         /** 用户领取优惠券 */
-        public static final String gain_pass_template = "GainPassTemplate";
+        public static final String GAIN_PASS_TEMPLATE = "GainPassTemplate";
 
         /** 用户创建评论 */
-        public static final String create_feedback = "CreateFeedback";
+        public static final String CREATE_FEEDBACK = "CreateFeedback";
 
         /** 用户获取评论 */
-        public static final String get_feedback = "GetFeedback";
+        public static final String GET_FEEDBACK = "GetFeedback";
+
+        /** 创建用户 */
+        public static final String CREATE_USER = "CreateUser";
     }
 }

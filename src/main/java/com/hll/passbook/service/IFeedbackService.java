@@ -9,16 +9,15 @@ import com.hll.passbook.vo.Response;
 public interface IFeedbackService {
     /**
      * <h2>创建评论</h2>
-     * @param feedback {@link: Feedback}
-     * @return {@link: Response}
-     * @throws Exception
+     * @param feedback {@link Feedback}
+     * @return {@link Response}
      */
     Response createFeedback(Feedback feedback) throws Exception;
 
     /**
      * <h2>根据 UserId 获取用户评论</h2>
      * @param userId 用户id
-     * @return {@link: Response}
+     * @return {@link Response}
      */
-    Response getFeedback(Long userId);
+    Response getFeedback(Long userId) throws Exception;
 }

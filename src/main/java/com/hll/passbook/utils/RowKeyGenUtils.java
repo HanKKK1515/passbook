@@ -13,7 +13,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 public class RowKeyGenUtils {
     /**
      * <h2>根据传入的 PassTemplate 生成 RowKey </h2>
-     * @param passTemplate {@link: PassTemplate}
+     * @param passTemplate {@link PassTemplate}
      * @return String RowKey
      */
     public static String genPassTemplateRowKey(PassTemplate passTemplate) {
@@ -26,7 +26,7 @@ public class RowKeyGenUtils {
 
     /**
      * <h2>根据生成优惠券的请求来生成优惠券的 RowKey，只可以在领取优惠券的时候使用</h2>
-     * @param request {@link: GainPassTemplateRequest}
+     * @param request {@link GainPassTemplateRequest}
      * @return String RowKey
      */
     public static String genPassRowKey(GainPassTemplateRequest request) {
@@ -38,7 +38,7 @@ public class RowKeyGenUtils {
 
     /**
      * <h2>根据传入的 Feedback 生成 RowKey</h2>
-     * @param feedback {@link: Feedback}
+     * @param feedback {@link Feedback}
      * @return String RowKey
      */
     public static String genFeedbackRowKey(Feedback feedback) {

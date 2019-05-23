@@ -10,7 +10,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.omg.PortableServer.AdapterActivator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -68,10 +67,10 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * <h2>生成 UserId</h2>
-     * @param prefix
-     * @return
+     * @param prefix 前缀
+     * @return userId
      */
-    public Long genUserId(Long prefix) {
+    private Long genUserId(Long prefix) {
         String suffix = RandomStringUtils.randomNumeric(5);
         return Long.valueOf(prefix + suffix);
     }
