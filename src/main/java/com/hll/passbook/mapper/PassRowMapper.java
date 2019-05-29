@@ -2,20 +2,14 @@ package com.hll.passbook.mapper;
 
 import com.hll.passbook.constant.Constants;
 import com.hll.passbook.vo.Pass;
-import com.spring4all.spring.boot.starter.hbase.api.RowMapper;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.springframework.data.hadoop.hbase.RowMapper;
 
 /**
  * <h1>HBase Pass Row To Pass Object</h1>
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class PassRowMapper implements RowMapper<Pass> {
     private static byte[] FAMILY_I = Constants.PassTable.FAMILY_I.getBytes();
     private static byte[] USER_ID = Constants.PassTable.USER_ID.getBytes();

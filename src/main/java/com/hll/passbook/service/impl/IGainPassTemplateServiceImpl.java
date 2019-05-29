@@ -8,13 +8,13 @@ import com.hll.passbook.utils.RowKeyGenUtils;
 import com.hll.passbook.vo.GainPassTemplateRequest;
 import com.hll.passbook.vo.PassTemplate;
 import com.hll.passbook.vo.Response;
-import com.spring4all.spring.boot.starter.hbase.api.HbaseTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.hadoop.hbase.client.Mutation;
-import org.apache.hadoop.hbase.client.Put;
+//import org.apache.hadoop.hbase.client.Mutation;
+//import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,9 +23,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
+//import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+//import java.util.List;
 
 /**
  * <h1>用户领取优惠券的功能实现</h1>
@@ -68,6 +68,14 @@ public class IGainPassTemplateServiceImpl implements IGainPassTemplateService {
         }
 
         if (passTemplate.getLimit() != -1) {
+            hbaseTemplate.put(
+                    Constants.PassTemplateTable.TABLE_NAME,
+                    passTemplateId,
+                    Constants.PassTemplateTable.FAMILY_C,
+                    Constants.PassTemplateTable.LIMIT,
+                    Bytes.toBytes(passTemplate.getLimit() - 1)
+            );
+            /*
             byte[] FAMILY_I = Constants.PassTemplateTable.FAMILY_C.getBytes();
             byte[] LIMIT = Constants.PassTemplateTable.LIMIT.getBytes();
             List<Mutation> datas = new ArrayList<>();
@@ -75,8 +83,8 @@ public class IGainPassTemplateServiceImpl implements IGainPassTemplateService {
             put.addColumn(FAMILY_I, LIMIT, Bytes.toBytes(passTemplate.getLimit() - 1));
             datas.add(put);
             hbaseTemplate.saveOrUpdates(Constants.PassTemplateTable.TABLE_NAME, datas);
+            */
         }
-
         if (!addPassForUser(request, passTemplate.getId(), passTemplateId)) {
             return Response.failure("Gain PassTemplate Error!");
         }
@@ -92,6 +100,61 @@ public class IGainPassTemplateServiceImpl implements IGainPassTemplateService {
      * @return true/false
      */
     private boolean addPassForUser(GainPassTemplateRequest request, Integer merchantsId, String passTemplateId) throws IOException {
+        hbaseTemplate.put(
+                Constants.PassTable.TABLE_NAME,
+                RowKeyGenUtils.genPassRowKey(request),
+                Constants.PassTable.FAMILY_I,
+                Constants.PassTable.USER_ID,
+                Bytes.toBytes(request.getUserId())
+        );
+        hbaseTemplate.put(
+                Constants.PassTable.TABLE_NAME,
+                RowKeyGenUtils.genPassRowKey(request),
+                Constants.PassTable.FAMILY_I,
+                Constants.PassTable.TEMPLATE_ID,
+                Bytes.toBytes(passTemplateId)
+        );
+
+        if (request.getPassTemplate().getHasToken()) {
+            String token = redisTemplate.opsForSet().pop(passTemplateId);
+            if (token == null) {
+                log.error("Token not exists!: {}", passTemplateId);
+                return false;
+            }
+            recordTokenToFile(merchantsId, passTemplateId, token);
+            hbaseTemplate.put(
+                    Constants.PassTable.TABLE_NAME,
+                    RowKeyGenUtils.genPassRowKey(request),
+                    Constants.PassTable.FAMILY_I,
+                    Constants.PassTable.TOKEN,
+                    Bytes.toBytes(token)
+            );
+        } else {
+            hbaseTemplate.put(
+                    Constants.PassTable.TABLE_NAME,
+                    RowKeyGenUtils.genPassRowKey(request),
+                    Constants.PassTable.FAMILY_I,
+                    Constants.PassTable.TOKEN,
+                    Bytes.toBytes("-1")
+            );
+        }
+
+        hbaseTemplate.put(
+                Constants.PassTable.TABLE_NAME,
+                RowKeyGenUtils.genPassRowKey(request),
+                Constants.PassTable.FAMILY_I,
+                Constants.PassTable.ASSIGNED_DATE,
+                Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(new Date()))
+        );
+        hbaseTemplate.put(
+                Constants.PassTable.TABLE_NAME,
+                RowKeyGenUtils.genPassRowKey(request),
+                Constants.PassTable.FAMILY_I,
+                Constants.PassTable.CON_DATE,
+                Bytes.toBytes("-1")
+        );
+
+        /*
         byte[] FAMILY_I = Constants.PassTable.FAMILY_I.getBytes();
         byte[] USER_ID = Constants.PassTable.USER_ID.getBytes();
         byte[] TEMPLATE_ID = Constants.PassTable.TEMPLATE_ID.getBytes();
@@ -121,7 +184,7 @@ public class IGainPassTemplateServiceImpl implements IGainPassTemplateService {
 
         datas.add(put);
         hbaseTemplate.saveOrUpdates(Constants.PassTable.TABLE_NAME, datas);
-
+        */
         return true;
     }
 

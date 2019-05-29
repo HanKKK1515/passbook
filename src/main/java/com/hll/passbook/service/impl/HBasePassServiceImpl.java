@@ -4,15 +4,13 @@ import com.hll.passbook.constant.Constants;
 import com.hll.passbook.service.IHBasePassService;
 import com.hll.passbook.utils.RowKeyGenUtils;
 import com.hll.passbook.vo.PassTemplate;
-import com.spring4all.spring.boot.starter.hbase.api.HbaseTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,26 +28,27 @@ public class HBasePassServiceImpl implements IHBasePassService {
 
     @Override
     public Boolean dropPassTemplateToHBase(PassTemplate passTemplate) {
-        byte[] rowKeyB = getRowKeyBytesIfUsable(passTemplate);
-        if (rowKeyB == null) {
+        String rowKey = getRowKeyBytesIfUsable(passTemplate);
+        if (rowKey == null) {
             return false;
         }
 
-        dropPassTemplateToHBase(passTemplate, rowKeyB);
+        dropPassTemplateToHBase(passTemplate, rowKey);
         return true;
     }
 
-    private byte[] getRowKeyBytesIfUsable(PassTemplate passTemplate) {
+    private String getRowKeyBytesIfUsable(PassTemplate passTemplate) {
         if (null == passTemplate) {
             return null;
         }
 
         String rowKey = RowKeyGenUtils.genPassTemplateRowKey(passTemplate);
-        byte[] rowKeyB = Bytes.toBytes(rowKey);
         try {
             TableName tableName = TableName.valueOf(Constants.PassTemplateTable.TABLE_NAME);
-            Table table = hbaseTemplate.getConnection().getTable(tableName);
-            Get get = new Get(rowKeyB);
+            Connection connection = ConnectionFactory.createConnection(hbaseTemplate.getConfiguration());
+            Table table = connection.getTable(tableName);
+//            Table table = hbaseTemplate.getConnection().getTable(tableName);
+            Get get = new Get(Bytes.toBytes(rowKey));
             if (table.exists(get)) {
                 log.info("RowKey {} is already exists!", rowKey);
                 return null;
@@ -59,10 +58,75 @@ public class HBasePassServiceImpl implements IHBasePassService {
             return null;
         }
 
-        return rowKeyB;
+        return rowKey;
     }
 
-    private void dropPassTemplateToHBase(PassTemplate passTemplate, byte[] rowKeyB) {
+    private void dropPassTemplateToHBase(PassTemplate passTemplate, String rowKey) {
+        hbaseTemplate.put(
+                Constants.PassTemplateTable.TABLE_NAME,
+                rowKey,
+                Constants.PassTemplateTable.FAMILY_B,
+                Constants.PassTemplateTable.ID,
+                Bytes.toBytes(passTemplate.getId())
+        );
+        hbaseTemplate.put(
+                Constants.PassTemplateTable.TABLE_NAME,
+                rowKey,
+                Constants.PassTemplateTable.FAMILY_B,
+                Constants.PassTemplateTable.TITLE,
+                Bytes.toBytes(passTemplate.getTitle())
+        );
+        hbaseTemplate.put(
+                Constants.PassTemplateTable.TABLE_NAME,
+                rowKey,
+                Constants.PassTemplateTable.FAMILY_B,
+                Constants.PassTemplateTable.SUMMARY,
+                Bytes.toBytes(passTemplate.getSummary())
+        );
+        hbaseTemplate.put(
+                Constants.PassTemplateTable.TABLE_NAME,
+                rowKey,
+                Constants.PassTemplateTable.FAMILY_B,
+                Constants.PassTemplateTable.DESC,
+                Bytes.toBytes(passTemplate.getDesc())
+        );
+        hbaseTemplate.put(
+                Constants.PassTemplateTable.TABLE_NAME,
+                rowKey,
+                Constants.PassTemplateTable.FAMILY_B,
+                Constants.PassTemplateTable.HAS_TOKEN,
+                Bytes.toBytes(passTemplate.getHasToken())
+        );
+        hbaseTemplate.put(
+                Constants.PassTemplateTable.TABLE_NAME,
+                rowKey,
+                Constants.PassTemplateTable.FAMILY_B,
+                Constants.PassTemplateTable.BACKGROUND,
+                Bytes.toBytes(passTemplate.getBackground())
+        );
+        hbaseTemplate.put(
+                Constants.PassTemplateTable.TABLE_NAME,
+                rowKey,
+                Constants.PassTemplateTable.FAMILY_C,
+                Constants.PassTemplateTable.LIMIT,
+                Bytes.toBytes(passTemplate.getLimit())
+        );
+        hbaseTemplate.put(
+                Constants.PassTemplateTable.TABLE_NAME,
+                rowKey,
+                Constants.PassTemplateTable.FAMILY_C,
+                Constants.PassTemplateTable.START,
+                Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(passTemplate.getStart()))
+        );
+        hbaseTemplate.put(
+                Constants.PassTemplateTable.TABLE_NAME,
+                rowKey,
+                Constants.PassTemplateTable.FAMILY_C,
+                Constants.PassTemplateTable.END,
+                Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(passTemplate.getEnd()))
+        );
+
+        /*
         byte[] FAMILY_B = Bytes.toBytes(Constants.PassTemplateTable.FAMILY_B);
         byte[] ID = Bytes.toBytes(Constants.PassTemplateTable.ID);
         byte[] TITLE = Bytes.toBytes(Constants.PassTemplateTable.TITLE);
@@ -76,7 +140,7 @@ public class HBasePassServiceImpl implements IHBasePassService {
         byte[] START = Bytes.toBytes(Constants.PassTemplateTable.START);
         byte[] END = Bytes.toBytes(Constants.PassTemplateTable.END);
 
-        Put put = new Put(rowKeyB);
+        Put put = new Put(Bytes.toBytes(rowKey));
         put.addColumn(FAMILY_B, ID, Bytes.toBytes(passTemplate.getId()));
         put.addColumn(FAMILY_B, TITLE, Bytes.toBytes(passTemplate.getTitle()));
         put.addColumn(FAMILY_B, SUMMARY, Bytes.toBytes(passTemplate.getSummary()));
@@ -89,5 +153,6 @@ public class HBasePassServiceImpl implements IHBasePassService {
         put.addColumn(FAMILY_C, END, Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(passTemplate.getEnd())));
 
         hbaseTemplate.saveOrUpdate(Constants.PassTemplateTable.TABLE_NAME, put);
+        */
     }
 }

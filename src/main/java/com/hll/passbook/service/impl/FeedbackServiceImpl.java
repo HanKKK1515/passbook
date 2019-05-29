@@ -7,13 +7,13 @@ import com.hll.passbook.service.IFeedbackService;
 import com.hll.passbook.utils.RowKeyGenUtils;
 import com.hll.passbook.vo.Feedback;
 import com.hll.passbook.vo.Response;
-import com.spring4all.spring.boot.starter.hbase.api.HbaseTemplate;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.hbase.client.Put;
+// import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.PrefixFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,20 +38,57 @@ public class FeedbackServiceImpl implements IFeedbackService {
             return new Response("Feedback error!");
         }
 
+        String rowKey = RowKeyGenUtils.genFeedbackRowKey(feedback);
+        hbaseTemplate.put(
+                Constants.FeedbackTable.TABLE_NAME,
+                rowKey,
+                Constants.FeedbackTable.FAMILY_I,
+                Constants.FeedbackTable.USER_ID,
+                Bytes.toBytes(feedback.getUserId())
+        );
+        hbaseTemplate.put(
+                Constants.FeedbackTable.TABLE_NAME,
+                rowKey,
+                Constants.FeedbackTable.FAMILY_I,
+                Constants.FeedbackTable.USER_ID,
+                Bytes.toBytes(feedback.getUserId())
+        );
+        hbaseTemplate.put(
+                Constants.FeedbackTable.TABLE_NAME,
+                rowKey,
+                Constants.FeedbackTable.FAMILY_I,
+                Constants.FeedbackTable.TYPE,
+                Bytes.toBytes(feedback.getType())
+        );
+        hbaseTemplate.put(
+                Constants.FeedbackTable.TABLE_NAME,
+                rowKey,
+                Constants.FeedbackTable.FAMILY_I,
+                Constants.FeedbackTable.TEMPLATE_ID,
+                Bytes.toBytes(feedback.getTemplateId())
+        );
+        hbaseTemplate.put(
+                Constants.FeedbackTable.TABLE_NAME,
+                rowKey,
+                Constants.FeedbackTable.FAMILY_I,
+                Constants.FeedbackTable.COMMENT,
+                Bytes.toBytes(feedback.getComment())
+        );
+
+/*
         byte[] FAMILY_I = Bytes.toBytes(Constants.FeedbackTable.FAMILY_I);
         byte[] USER_ID = Bytes.toBytes(Constants.FeedbackTable.USER_ID);
         byte[] TYPE = Bytes.toBytes(Constants.FeedbackTable.TYPE);
         byte[] TEMPLATE_ID = Bytes.toBytes(Constants.FeedbackTable.TEMPLATE_ID);
         byte[] COMMENT = Bytes.toBytes(Constants.FeedbackTable.COMMENT);
 
-        String rowKey = RowKeyGenUtils.genFeedbackRowKey(feedback);
         Put put = new Put(Bytes.toBytes(rowKey));
         put.addColumn(FAMILY_I, USER_ID, Bytes.toBytes(feedback.getUserId()));
         put.addColumn(FAMILY_I, TYPE, Bytes.toBytes(feedback.getType()));
         put.addColumn(FAMILY_I, TEMPLATE_ID, Bytes.toBytes(feedback.getTemplateId()));
         put.addColumn(FAMILY_I, COMMENT, Bytes.toBytes(feedback.getComment()));
-
         hbaseTemplate.saveOrUpdate(Constants.FeedbackTable.TABLE_NAME, put);
+*/
         return Response.success();
     }
 

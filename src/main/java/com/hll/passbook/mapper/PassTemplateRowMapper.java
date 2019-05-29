@@ -2,15 +2,14 @@ package com.hll.passbook.mapper;
 
 import com.hll.passbook.constant.Constants;
 import com.hll.passbook.vo.PassTemplate;
-import com.spring4all.spring.boot.starter.hbase.api.RowMapper;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.springframework.data.hadoop.hbase.RowMapper;
 
 /**
  *<h1>HBase PassTmplate Row To PassTemplate Object</h1>
  */
-
 public class PassTemplateRowMapper implements RowMapper<PassTemplate> {
     private static byte[] FAMILY_B = Constants.PassTemplateTable.FAMILY_B.getBytes();
     private static byte[] ID = Constants.PassTemplateTable.ID.getBytes();

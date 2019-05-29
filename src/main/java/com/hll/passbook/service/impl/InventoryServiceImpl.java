@@ -8,14 +8,14 @@ import com.hll.passbook.service.IInventoryService;
 import com.hll.passbook.service.IUserPassService;
 import com.hll.passbook.utils.RowKeyGenUtils;
 import com.hll.passbook.vo.*;
-import com.spring4all.spring.boot.starter.hbase.api.HbaseTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -70,7 +70,7 @@ public class InventoryServiceImpl implements IInventoryService {
                 new SingleColumnValueFilter(
                         Bytes.toBytes(Constants.PassTemplateTable.FAMILY_B),
                         Bytes.toBytes(Constants.PassTemplateTable.LIMIT),
-                        CompareFilter.CompareOp.GREATER,
+                        CompareOperator.GREATER,
                         Bytes.toBytes("0")
                 )
         );
@@ -78,7 +78,7 @@ public class InventoryServiceImpl implements IInventoryService {
                 new SingleColumnValueFilter(
                         Bytes.toBytes(Constants.PassTemplateTable.FAMILY_B),
                         Bytes.toBytes(Constants.PassTemplateTable.LIMIT),
-                        CompareFilter.CompareOp.EQUAL,
+                        CompareOperator.EQUAL,
                         Bytes.toBytes("-1")
                 )
         );

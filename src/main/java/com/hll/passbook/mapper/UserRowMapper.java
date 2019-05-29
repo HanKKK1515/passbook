@@ -2,9 +2,9 @@ package com.hll.passbook.mapper;
 
 import com.hll.passbook.constant.Constants;
 import com.hll.passbook.vo.User;
-import com.spring4all.spring.boot.starter.hbase.api.RowMapper;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.springframework.data.hadoop.hbase.RowMapper;
 
 /**
  * <h1>HBase User Row To User Object</h1>

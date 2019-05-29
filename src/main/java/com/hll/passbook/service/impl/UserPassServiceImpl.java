@@ -11,15 +11,15 @@ import com.hll.passbook.vo.Pass;
 import com.hll.passbook.vo.PassInfo;
 import com.hll.passbook.vo.PassTemplate;
 import com.hll.passbook.vo.Response;
-import com.spring4all.spring.boot.starter.hbase.api.HbaseTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -67,13 +67,13 @@ public class UserPassServiceImpl implements IUserPassService {
         filters.add(new SingleColumnValueFilter(
                 Constants.PassTable.FAMILY_I.getBytes(),
                 Constants.PassTable.CON_DATE.getBytes(),
-                CompareFilter.CompareOp.EQUAL,
+                CompareOperator.EQUAL,
                 Bytes.toBytes("-1")
         ));
         filters.add(new SingleColumnValueFilter(
                 Constants.PassTable.FAMILY_I.getBytes(),
                 Constants.PassTable.TEMPLATE_ID.getBytes(),
-                CompareFilter.CompareOp.EQUAL,
+                CompareOperator.EQUAL,
                 Bytes.toBytes(pass.getTemplateId())
         ));
 
@@ -86,6 +86,15 @@ public class UserPassServiceImpl implements IUserPassService {
             return Response.failure("UserUsePass Error");
         }
 
+        hbaseTemplate.put(
+                Constants.PassTable.TABLE_NAME,
+                passes.get(0).getRowKey(),
+                Constants.PassTable.FAMILY_I,
+                Constants.PassTable.CON_DATE,
+                Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(new Date()))
+        );
+
+        /*
         Put put = new Put(passes.get(0).getRowKey().getBytes());
         put.addColumn(
                 Constants.PassTable.FAMILY_I.getBytes(),
@@ -96,6 +105,7 @@ public class UserPassServiceImpl implements IUserPassService {
         datas.add(put);
 
         hbaseTemplate.saveOrUpdates(Constants.PassTable.TABLE_NAME, datas);
+        */
 
         return Response.success();
     }
@@ -126,7 +136,9 @@ public class UserPassServiceImpl implements IUserPassService {
         templateIds.forEach(t -> templateGets.add(new Get(Bytes.toBytes(t))));
 
         TableName templateTableName = TableName.valueOf(Constants.PassTemplateTable.TABLE_NAME);
-        Table templateTable = hbaseTemplate.getConnection().getTable(templateTableName);
+        Connection connection = ConnectionFactory.createConnection(hbaseTemplate.getConfiguration());
+        Table templateTable = connection.getTable(templateTableName);
+//        Table templateTable = hbaseTemplate.getConnection().getTable(templateTableName);
         Result[] templateResults = templateTable.get(templateGets);
 
         // PassTemplate Id -> PassTemplate Object 的 Map,用于构造 PassInfo
@@ -182,7 +194,7 @@ public class UserPassServiceImpl implements IUserPassService {
             filters.add(new SingleColumnValueFilter(
                     Constants.PassTable.FAMILY_I.getBytes(),
                     Constants.PassTable.CON_DATE.getBytes(),
-                    status == PassStatus.UNUSED ? CompareFilter.CompareOp.EQUAL : CompareFilter.CompareOp.NOT_EQUAL,
+                    status == PassStatus.UNUSED ? CompareOperator.EQUAL : CompareOperator.NOT_EQUAL,
                     Bytes.toBytes("-1")
             ));
         }

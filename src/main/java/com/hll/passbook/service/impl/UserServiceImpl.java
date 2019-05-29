@@ -4,18 +4,18 @@ import com.hll.passbook.constant.Constants;
 import com.hll.passbook.service.IUserService;
 import com.hll.passbook.vo.Response;
 import com.hll.passbook.vo.User;
-import com.spring4all.spring.boot.starter.hbase.api.HbaseTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.hadoop.hbase.client.Mutation;
-import org.apache.hadoop.hbase.client.Put;
+//import org.apache.hadoop.hbase.client.Mutation;
+//import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+//import java.util.ArrayList;
+//import java.util.List;
 
 /**
  * <h2>创建用户服务实现</h2>
@@ -37,6 +37,44 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public Response createUser(User user) throws Exception {
+        Long curCount = redisTemplate.opsForValue().increment(Constants.USER_COUNT_REDIS_KEY, 1);
+        Long userId = genUserId(curCount);
+        hbaseTemplate.put(
+                Constants.UserTable.TABLE_NAME,
+                String.valueOf(userId),
+                Constants.UserTable.FAMILY_B,
+                Constants.UserTable.NAME,
+                Bytes.toBytes(user.getBaseInfo().getName())
+        );
+        hbaseTemplate.put(
+                Constants.UserTable.TABLE_NAME,
+                String.valueOf(userId),
+                Constants.UserTable.FAMILY_B,
+                Constants.UserTable.AGE,
+                Bytes.toBytes(user.getBaseInfo().getAge())
+        );
+        hbaseTemplate.put(
+                Constants.UserTable.TABLE_NAME,
+                String.valueOf(userId),
+                Constants.UserTable.FAMILY_B,
+                Constants.UserTable.SEX,
+                Bytes.toBytes(user.getBaseInfo().getSex())
+        );
+        hbaseTemplate.put(
+                Constants.UserTable.TABLE_NAME,
+                String.valueOf(userId),
+                Constants.UserTable.FAMILY_O,
+                Constants.UserTable.PHONE,
+                Bytes.toBytes(user.getOtherInfo().getPhone())
+        );
+        hbaseTemplate.put(
+                Constants.UserTable.TABLE_NAME,
+                String.valueOf(userId),
+                Constants.UserTable.FAMILY_O,
+                Constants.UserTable.ADDRESS,
+                Bytes.toBytes(user.getOtherInfo().getAddress())
+        );
+        /*
         byte[] FAMILY_B = Constants.UserTable.FAMILY_B.getBytes();
         byte[] NAME = Constants.UserTable.NAME.getBytes();
         byte[] AGE = Constants.UserTable.AGE.getBytes();
@@ -46,8 +84,6 @@ public class UserServiceImpl implements IUserService {
         byte[] PHONE = Constants.UserTable.PHONE.getBytes();
         byte[] ADDRESS = Constants.UserTable.ADDRESS.getBytes();
 
-        Long curCount = redisTemplate.opsForValue().increment(Constants.USER_COUNT_REDIS_KEY, 1);
-        Long userId = genUserId(curCount);
 
         List<Mutation> datas = new ArrayList<>();
 
@@ -60,8 +96,10 @@ public class UserServiceImpl implements IUserService {
         datas.add(put);
 
         hbaseTemplate.saveOrUpdates(Constants.UserTable.TABLE_NAME, datas);
+        */
 
         user.setId(userId);
+
         return new Response(user);
     }
 

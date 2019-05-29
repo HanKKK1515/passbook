@@ -1,6 +1,5 @@
 package com.hll.passbook.vo;
 
-import com.google.common.base.Enums;
 import com.hll.passbook.constant.FeedbackType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Feedback {
-    /** 评论类型 */
+    /** 用户 id */
     private Long userId;
 
     /** 评论类型 */
@@ -26,7 +25,11 @@ public class Feedback {
     private String comment;
 
     public Boolean validate() {
-        FeedbackType type = Enums.getIfPresent(FeedbackType.class, this.type.toUpperCase()).orNull();
-        return null != type && null != comment;
+        try {
+            Enum.valueOf(FeedbackType.class, this.type.toUpperCase());
+        } catch (IllegalArgumentException iae) {
+            return false;
+        }
+        return null != comment;
     }
 }
