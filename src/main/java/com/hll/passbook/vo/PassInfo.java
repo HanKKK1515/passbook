@@ -4,6 +4,7 @@ import com.hll.passbook.entity.Merchants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * <h1>用户领取的优惠券信息</h1>
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class PassInfo {
     /** 优惠券 */
     private Pass pass;

@@ -3,6 +3,7 @@ package com.hll.passbook.vo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * 通用的响应对象
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class Response {
     /** 错误码，正确返回0 */
     private Integer errorCode = 0;

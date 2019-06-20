@@ -3,6 +3,7 @@ package com.hll.passbook.vo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * <h1>统一错误信息</h1>
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class ErrorInfo<T> {
     /** 统一错误码 */
     public static final Integer ERROR = -1;

@@ -4,6 +4,7 @@ import com.hll.passbook.entity.Merchants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * <h1>优惠券模板信息</h1>
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class PassTemplateInfo {
     /** 优惠券模板 */
     private PassTemplate passTemplate;
