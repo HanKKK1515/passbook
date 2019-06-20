@@ -25,7 +25,7 @@ public class ConsumePassTemplate {
     }
 
     @KafkaListener(topics = {Constants.TEMPLATE_TOPIC})
-    public void recive(@Payload String passTemplate,
+    public void receive(@Payload String passTemplate,
                        @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
                        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                        @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {

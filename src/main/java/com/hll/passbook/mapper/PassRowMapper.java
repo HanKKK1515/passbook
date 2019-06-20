@@ -22,6 +22,7 @@ public class PassRowMapper implements RowMapper<Pass> {
     public Pass mapRow(Result result, int i) throws Exception {
         Pass pass = new Pass();
         pass.setUserId(Bytes.toLong(result.getValue(FAMILY_I, USER_ID)));
+        pass.setRowKey(Bytes.toString(result.getRow()));
         pass.setTemplateId(Bytes.toString(result.getValue(FAMILY_I, TEMPLATE_ID)));
         pass.setToken(Bytes.toString(result.getValue(FAMILY_I, TOKEN)));
 

@@ -1,0 +1,18 @@
+{
+  "properties": [
+    {
+      "name": "hbase.zookeeper.quorum",
+      "type": "java.lang.String",
+      "description": "Description for hbase.zookeeper.quorum."
+    },
+    {
+      "name": "hbase.zookeeper.property.clientPort",
+      "type": "java.lang.String",
+      "description": "Description for hbase.zookeeper.property.clientPort."
+    },
+    {
+      "name": "zookeeper.znode.parent",
+      "type": "java.lang.String",
+      "description": "Description for zookeeper.znode.parent."
+    }
+  ] }

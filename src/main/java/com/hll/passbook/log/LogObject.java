@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LogObject {
+class LogObject {
     /** 日志动作类型 */
     private String action;
 

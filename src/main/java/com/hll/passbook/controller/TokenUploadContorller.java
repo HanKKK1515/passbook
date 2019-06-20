@@ -3,7 +3,8 @@ package com.hll.passbook.controller;
 import com.hll.passbook.constant.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.connection.RedisClusterConnection;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
@@ -77,8 +78,6 @@ public class TokenUploadContorller {
         return "uploadStatus";
     }
 
-
-
     /**
      * <h2>将 Token 写入到 Redis </h2>
      * @param path {@link Path}
@@ -99,12 +98,15 @@ public class TokenUploadContorller {
             return false;
         }
 
-        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
-            for (String token : tokens) {
-                connection.sAdd(key.getBytes(), token.getBytes());
-            }
-            return null;
-        });
+        RedisConnectionFactory connectionFactory = redisTemplate.getConnectionFactory();
+        if (connectionFactory == null) {
+            return false;
+        }
+        RedisClusterConnection clusterConnection = connectionFactory.getClusterConnection();
+        for (String token : tokens) {
+            clusterConnection.sAdd(key.getBytes(), token.getBytes());
+        }
+
         return true;
     }
 }

@@ -1,17 +1,18 @@
 package com.hll.passbook.service.impl;
 
 import com.hll.passbook.constant.Constants;
+import com.hll.passbook.hbase.HBaseService;
 import com.hll.passbook.service.IHBasePassService;
 import com.hll.passbook.utils.RowKeyGenUtils;
 import com.hll.passbook.vo.PassTemplate;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <h1>Pass HBase 服务</h1>
@@ -19,11 +20,11 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class HBasePassServiceImpl implements IHBasePassService {
-    /** HBase 客户端 */
-    private final HbaseTemplate hbaseTemplate;
+    /** HBase 工具类 */
+    private final HBaseService hBaseService;
     @Autowired
-    public HBasePassServiceImpl(HbaseTemplate hbaseTemplate) {
-        this.hbaseTemplate = hbaseTemplate;
+    public HBasePassServiceImpl(HBaseService hBaseService) {
+        this.hBaseService = hBaseService;
     }
 
     @Override
@@ -33,8 +34,7 @@ public class HBasePassServiceImpl implements IHBasePassService {
             return false;
         }
 
-        dropPassTemplateToHBase(passTemplate, rowKey);
-        return true;
+        return dropPassTemplateToHBase(passTemplate, rowKey);
     }
 
     private String getRowKeyBytesIfUsable(PassTemplate passTemplate) {
@@ -43,88 +43,34 @@ public class HBasePassServiceImpl implements IHBasePassService {
         }
 
         String rowKey = RowKeyGenUtils.genPassTemplateRowKey(passTemplate);
-        try {
-            TableName tableName = TableName.valueOf(Constants.PassTemplateTable.TABLE_NAME);
-            Connection connection = ConnectionFactory.createConnection(hbaseTemplate.getConfiguration());
-            Table table = connection.getTable(tableName);
-//            Table table = hbaseTemplate.getConnection().getTable(tableName);
-            Get get = new Get(Bytes.toBytes(rowKey));
-            if (table.exists(get)) {
-                log.info("RowKey {} is already exists!", rowKey);
-                return null;
-            }
-        } catch (Exception ex) {
-            log.error("DropPassTemplateToHBase Error: {}", ex.getMessage());
+        Get get = new Get(Bytes.toBytes(rowKey));
+        if (hBaseService.existsByGet(Constants.PassTemplateTable.TABLE_NAME, get)) {
+            log.info("RowKey {} is already exists!", rowKey);
             return null;
         }
 
         return rowKey;
     }
 
-    private void dropPassTemplateToHBase(PassTemplate passTemplate, String rowKey) {
-        hbaseTemplate.put(
-                Constants.PassTemplateTable.TABLE_NAME,
-                rowKey,
-                Constants.PassTemplateTable.FAMILY_B,
-                Constants.PassTemplateTable.ID,
-                Bytes.toBytes(passTemplate.getId())
-        );
-        hbaseTemplate.put(
-                Constants.PassTemplateTable.TABLE_NAME,
-                rowKey,
-                Constants.PassTemplateTable.FAMILY_B,
-                Constants.PassTemplateTable.TITLE,
-                Bytes.toBytes(passTemplate.getTitle())
-        );
-        hbaseTemplate.put(
-                Constants.PassTemplateTable.TABLE_NAME,
-                rowKey,
-                Constants.PassTemplateTable.FAMILY_B,
-                Constants.PassTemplateTable.SUMMARY,
-                Bytes.toBytes(passTemplate.getSummary())
-        );
-        hbaseTemplate.put(
-                Constants.PassTemplateTable.TABLE_NAME,
-                rowKey,
-                Constants.PassTemplateTable.FAMILY_B,
-                Constants.PassTemplateTable.DESC,
-                Bytes.toBytes(passTemplate.getDesc())
-        );
-        hbaseTemplate.put(
-                Constants.PassTemplateTable.TABLE_NAME,
-                rowKey,
-                Constants.PassTemplateTable.FAMILY_B,
-                Constants.PassTemplateTable.HAS_TOKEN,
-                Bytes.toBytes(passTemplate.getHasToken())
-        );
-        hbaseTemplate.put(
-                Constants.PassTemplateTable.TABLE_NAME,
-                rowKey,
-                Constants.PassTemplateTable.FAMILY_B,
-                Constants.PassTemplateTable.BACKGROUND,
-                Bytes.toBytes(passTemplate.getBackground())
-        );
-        hbaseTemplate.put(
-                Constants.PassTemplateTable.TABLE_NAME,
-                rowKey,
-                Constants.PassTemplateTable.FAMILY_C,
-                Constants.PassTemplateTable.LIMIT,
-                Bytes.toBytes(passTemplate.getLimit())
-        );
-        hbaseTemplate.put(
-                Constants.PassTemplateTable.TABLE_NAME,
-                rowKey,
-                Constants.PassTemplateTable.FAMILY_C,
-                Constants.PassTemplateTable.START,
-                Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(passTemplate.getStart()))
-        );
-        hbaseTemplate.put(
-                Constants.PassTemplateTable.TABLE_NAME,
-                rowKey,
-                Constants.PassTemplateTable.FAMILY_C,
-                Constants.PassTemplateTable.END,
-                Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(passTemplate.getEnd()))
-        );
+    private Boolean dropPassTemplateToHBase(PassTemplate passTemplate, String rowKey) {
+        Map<String, Object> familyData = new HashMap<>();
+
+        PassTemplate passTemplateB = new PassTemplate();
+        passTemplateB.setId(passTemplate.getId());
+        passTemplateB.setTitle(passTemplate.getTitle());
+        passTemplateB.setSummary(passTemplate.getSummary());
+        passTemplateB.setDesc(passTemplate.getDesc());
+        passTemplateB.setHasToken(passTemplate.getHasToken());
+        passTemplateB.setBackground(passTemplate.getBackground());
+        familyData.put(Constants.PassTemplateTable.FAMILY_B, passTemplateB);
+
+        PassTemplate passTemplateC = new PassTemplate();
+        passTemplateC.setLimit(passTemplate.getLimit());
+        passTemplateC.setStart(passTemplate.getStart());
+        passTemplateC.setEnd(passTemplate.getEnd());
+        familyData.put(Constants.PassTemplateTable.FAMILY_C, passTemplateC);
+
+        return hBaseService.createPro(familyData, Constants.PassTemplateTable.TABLE_NAME, rowKey);
 
         /*
         byte[] FAMILY_B = Bytes.toBytes(Constants.PassTemplateTable.FAMILY_B);
@@ -152,7 +98,7 @@ public class HBasePassServiceImpl implements IHBasePassService {
         put.addColumn(FAMILY_C, START, Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(passTemplate.getStart())));
         put.addColumn(FAMILY_C, END, Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(passTemplate.getEnd())));
 
-        hbaseTemplate.saveOrUpdate(Constants.PassTemplateTable.TABLE_NAME, put);
+        hBaseService.saveOrUpdate(Constants.PassTemplateTable.TABLE_NAME, put);
         */
     }
 }

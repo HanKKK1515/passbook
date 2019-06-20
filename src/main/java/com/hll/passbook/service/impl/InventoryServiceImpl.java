@@ -3,19 +3,17 @@ package com.hll.passbook.service.impl;
 import com.hll.passbook.constant.Constants;
 import com.hll.passbook.dao.MerchantsDao;
 import com.hll.passbook.entity.Merchants;
-import com.hll.passbook.mapper.PassTemplateRowMapper;
+import com.hll.passbook.hbase.HBaseService;
 import com.hll.passbook.service.IInventoryService;
 import com.hll.passbook.service.IUserPassService;
 import com.hll.passbook.utils.RowKeyGenUtils;
 import com.hll.passbook.vo.*;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.hbase.CompareOperator;
-import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,16 +26,16 @@ import java.util.stream.Stream;
 @Slf4j
 @Service
 public class InventoryServiceImpl implements IInventoryService {
-    /** HBase 客户端 */
-    private final HbaseTemplate hbaseTemplate;
+    /** HBase 工具类 */
+    private final HBaseService hBaseService;
     /** MerchantsDao 接口 */
     private final MerchantsDao merchantsDao;
     /** UserPassService 接口 */
     private final IUserPassService userPassService;
 
     @Autowired
-    public InventoryServiceImpl(HbaseTemplate hbaseTemplate, MerchantsDao merchantsDao, IUserPassService userPassService) {
-        this.hbaseTemplate = hbaseTemplate;
+    public InventoryServiceImpl(HBaseService hBaseService, MerchantsDao merchantsDao, IUserPassService userPassService) {
+        this.hBaseService = hBaseService;
         this.merchantsDao = merchantsDao;
         this.userPassService = userPassService;
     }
@@ -51,7 +49,7 @@ public class InventoryServiceImpl implements IInventoryService {
         List<PassTemplate> passTemplates = passInfos.stream().map(PassInfo::getPassTemplate).collect(Collectors.toList());
 
         List<String> excludeIds = new ArrayList<>();
-        passTemplates.forEach(p -> excludeIds.add(RowKeyGenUtils.genPassTemplateRowKey(p)));
+        passTemplates.forEach(passTemplate -> excludeIds.add(RowKeyGenUtils.genPassTemplateRowKey(passTemplate)));
         List<PassTemplate> availablePassTemplate = getAvailablePassTemplate(excludeIds);
         List<PassTemplateInfo> passTemplateInfos = builderPassTemplateInfo(availablePassTemplate);
 
@@ -70,7 +68,7 @@ public class InventoryServiceImpl implements IInventoryService {
                 new SingleColumnValueFilter(
                         Bytes.toBytes(Constants.PassTemplateTable.FAMILY_B),
                         Bytes.toBytes(Constants.PassTemplateTable.LIMIT),
-                        CompareOperator.GREATER,
+                        CompareFilter.CompareOp.GREATER,
                         Bytes.toBytes("0")
                 )
         );
@@ -78,13 +76,12 @@ public class InventoryServiceImpl implements IInventoryService {
                 new SingleColumnValueFilter(
                         Bytes.toBytes(Constants.PassTemplateTable.FAMILY_B),
                         Bytes.toBytes(Constants.PassTemplateTable.LIMIT),
-                        CompareOperator.EQUAL,
+                        CompareFilter.CompareOp.EQUAL,
                         Bytes.toBytes("-1")
                 )
         );
-        Scan scan = new Scan();
-        scan.setFilter(filterList);
-        List<PassTemplate> passTemplates = hbaseTemplate.find(Constants.PassTemplateTable.TABLE_NAME, scan, new PassTemplateRowMapper());
+
+        List<PassTemplate> passTemplates = hBaseService.searchAllByFilter(Constants.PassTemplateTable.TABLE_NAME, filterList, PassTemplate.class);
 
         List<PassTemplate> availablePassTemplate = new ArrayList<>();
         for (PassTemplate passTemplate : passTemplates) {
@@ -108,9 +105,9 @@ public class InventoryServiceImpl implements IInventoryService {
     private List<PassTemplateInfo> builderPassTemplateInfo(List<PassTemplate> passTemplates) {
         Stream<Integer> streamIds = passTemplates.stream().map(PassTemplate::getId);
         List<Integer> ids = streamIds.collect(Collectors.toList());
-        List<Merchants> merchantsList = merchantsDao.findAllByIdIn(ids);
+        List<Merchants> merchantses = merchantsDao.findAllByIdIn(ids);
         Map<Integer, Merchants> merchantsMap = new HashMap<>();
-        merchantsList.forEach(m -> merchantsMap.put(m.getId(), m));
+        merchantses.forEach(merchants -> merchantsMap.put(merchants.getId(), merchants));
 
         List<PassTemplateInfo> passTemplateInfos = new ArrayList<>();
         for (PassTemplate passTemplate : passTemplates) {

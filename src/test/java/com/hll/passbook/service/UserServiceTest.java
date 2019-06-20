@@ -19,8 +19,8 @@ public class UserServiceTest {
     @Test
     public void testCreateUser() throws Exception {
         User user = new User();
-        user.setBaseInfo(new User.BaseInfo("jack", 16, "m"));
-        user.setOtherInfo(new User.OtherInfo("13333333333", "深圳市南山区"));
+        user.setBaseInfo(new User.BaseInfo("jack2", 162, "m2"));
+        user.setOtherInfo(new User.OtherInfo("13355555552", "深圳市南山区2"));
 
         System.out.println(userService.createUser(user));
     }

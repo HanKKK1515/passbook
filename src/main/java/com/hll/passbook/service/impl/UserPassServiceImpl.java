@@ -5,7 +5,7 @@ import com.hll.passbook.constant.Constants;
 import com.hll.passbook.constant.PassStatus;
 import com.hll.passbook.dao.MerchantsDao;
 import com.hll.passbook.entity.Merchants;
-import com.hll.passbook.mapper.PassRowMapper;
+import com.hll.passbook.hbase.HBaseService;
 import com.hll.passbook.service.IUserPassService;
 import com.hll.passbook.vo.Pass;
 import com.hll.passbook.vo.PassInfo;
@@ -13,13 +13,12 @@ import com.hll.passbook.vo.PassTemplate;
 import com.hll.passbook.vo.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.apache.hadoop.hbase.*;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.filter.*;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.hadoop.hbase.HbaseTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -33,13 +32,13 @@ import java.util.stream.Stream;
 @Service
 public class UserPassServiceImpl implements IUserPassService {
     /** HBase 客户端 */
-    private final HbaseTemplate hbaseTemplate;
+    private final HBaseService hBaseService;
     /** 商户服务 */
     private final MerchantsDao merchantsDao;
 
     @Autowired
-    public UserPassServiceImpl(HbaseTemplate hbaseTemplate, MerchantsDao merchantsDao) {
-        this.hbaseTemplate = hbaseTemplate;
+    public UserPassServiceImpl(HBaseService hBaseService, MerchantsDao merchantsDao) {
+        this.hBaseService = hBaseService;
         this.merchantsDao = merchantsDao;
     }
 
@@ -67,47 +66,37 @@ public class UserPassServiceImpl implements IUserPassService {
         filters.add(new SingleColumnValueFilter(
                 Constants.PassTable.FAMILY_I.getBytes(),
                 Constants.PassTable.CON_DATE.getBytes(),
-                CompareOperator.EQUAL,
-                Bytes.toBytes("-1")
+                CompareFilter.CompareOp.EQUAL,
+                new NullComparator()
         ));
         filters.add(new SingleColumnValueFilter(
                 Constants.PassTable.FAMILY_I.getBytes(),
                 Constants.PassTable.TEMPLATE_ID.getBytes(),
-                CompareOperator.EQUAL,
+                CompareFilter.CompareOp.EQUAL,
                 Bytes.toBytes(pass.getTemplateId())
         ));
 
-        Scan scan = new Scan();
-        scan.setFilter(new FilterList(filters));
-
-        List<Pass> passes = hbaseTemplate.find(Constants.PassTable.TABLE_NAME, scan, new PassRowMapper());
+        List<Pass> passes = hBaseService.searchAllByFilters(Constants.PassTable.TABLE_NAME, filters, Pass.class);
         if (passes == null || passes.size() != 1) {
             log.error("UserUsePass Error: {}", JSON.toJSONString(passes));
             return Response.failure("UserUsePass Error");
         }
 
-        hbaseTemplate.put(
-                Constants.PassTable.TABLE_NAME,
-                passes.get(0).getRowKey(),
-                Constants.PassTable.FAMILY_I,
-                Constants.PassTable.CON_DATE,
-                Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(new Date()))
-        );
-
-        /*
         Put put = new Put(passes.get(0).getRowKey().getBytes());
         put.addColumn(
                 Constants.PassTable.FAMILY_I.getBytes(),
                 Constants.PassTable.CON_DATE.getBytes(),
-                Bytes.toBytes(DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.format(new Date()))
+                Bytes.toBytes(DateFormatUtils.format(new Date(), Constants.DATE_FORMAT))
         );
-        List<Mutation> datas = new ArrayList<>();
+        List<Put> datas = new ArrayList<>();
         datas.add(put);
 
-        hbaseTemplate.saveOrUpdates(Constants.PassTable.TABLE_NAME, datas);
-        */
-
-        return Response.success();
+        if (hBaseService.saveOrUpdates(Constants.PassTable.TABLE_NAME, datas)) {
+            return Response.success();
+        } else {
+            log.error("UserUsePass Error: {}", JSON.toJSONString(passes));
+            return Response.failure("UserUsePass Error");
+        }
     }
 
     /**
@@ -116,48 +105,21 @@ public class UserPassServiceImpl implements IUserPassService {
      * @return Map {@link PassTemplate}
      */
     private Map<String, PassTemplate> buildPassTemplateMap(List<Pass> passes) throws Exception {
-        byte[] FAMILY_B = Bytes.toBytes(Constants.PassTemplateTable.FAMILY_B);
-        byte[] ID = Bytes.toBytes(Constants.PassTemplateTable.ID);
-        byte[] TITLE = Bytes.toBytes(Constants.PassTemplateTable.TITLE);
-        byte[] SUMMARY = Bytes.toBytes(Constants.PassTemplateTable.SUMMARY);
-        byte[] DESC = Bytes.toBytes(Constants.PassTemplateTable.DESC);
-        byte[] HAS_TOKEN = Bytes.toBytes(Constants.PassTemplateTable.HAS_TOKEN);
-        byte[] BACKGROUND = Bytes.toBytes(Constants.PassTemplateTable.BACKGROUND);
-
-        byte[] FAMILY_C = Bytes.toBytes(Constants.PassTemplateTable.FAMILY_C);
-        byte[] LIMIT = Bytes.toBytes(Constants.PassTemplateTable.LIMIT);
-        byte[] START = Bytes.toBytes(Constants.PassTemplateTable.START);
-        byte[] END = Bytes.toBytes(Constants.PassTemplateTable.END);
-
         Stream<String> templateIdsStream = passes.stream().map(Pass::getTemplateId);
         List<String> templateIds = templateIdsStream.collect(Collectors.toList());
-        
-        List<Get> templateGets = new ArrayList<>(templateIds.size());
-        templateIds.forEach(t -> templateGets.add(new Get(Bytes.toBytes(t))));
 
-        TableName templateTableName = TableName.valueOf(Constants.PassTemplateTable.TABLE_NAME);
-        Connection connection = ConnectionFactory.createConnection(hbaseTemplate.getConfiguration());
-        Table templateTable = connection.getTable(templateTableName);
-//        Table templateTable = hbaseTemplate.getConnection().getTable(templateTableName);
-        Result[] templateResults = templateTable.get(templateGets);
+        List<Get> templateGets = new ArrayList<>(templateIds.size());
+        templateIds.forEach(templateId -> templateGets.add(new Get(Bytes.toBytes(templateId))));
+
+        Result[] templateResults = hBaseService.getByGets(Constants.PassTemplateTable.TABLE_NAME, templateGets);
 
         // PassTemplate Id -> PassTemplate Object 的 Map,用于构造 PassInfo
         Map<String, PassTemplate> templateId2Object = new HashMap<>();
         for (Result result : templateResults) {
-            PassTemplate passTemplate = new PassTemplate();
-            passTemplate.setId(Bytes.toInt(result.getValue(FAMILY_B, ID)));
-            passTemplate.setTitle(Bytes.toString(result.getValue(FAMILY_B, TITLE)));
-            passTemplate.setSummary(Bytes.toString(result.getValue(FAMILY_B, SUMMARY)));
-            passTemplate.setDesc(Bytes.toString(result.getValue(FAMILY_B, DESC)));
-            passTemplate.setHasToken(Bytes.toBoolean(result.getValue(FAMILY_B, HAS_TOKEN)));
-            passTemplate.setBackground(Bytes.toInt(result.getValue(FAMILY_B, BACKGROUND)));
-
-            String[] pattern = new String[] {"yyyy-mm-dd"};
-            passTemplate.setLimit(Bytes.toLong(result.getValue(FAMILY_C, LIMIT)));
-            passTemplate.setStart(DateUtils.parseDate(Bytes.toString(result.getValue(FAMILY_C, START)), pattern));
-            passTemplate.setEnd(DateUtils.parseDate(Bytes.toString(result.getValue(FAMILY_C, END)), pattern));
-
-            templateId2Object.put(Bytes.toString(result.getRow()), passTemplate);
+            PassTemplate passTemplate = hBaseService.result2Object(result, PassTemplate.class);
+            if (passTemplate != null) {
+                templateId2Object.put(Bytes.toString(result.getRow()), passTemplate);
+            }
         }
 
         return templateId2Object;
@@ -191,18 +153,17 @@ public class UserPassServiceImpl implements IUserPassService {
         List<Filter> filters = new ArrayList<>();
         filters.add(new PrefixFilter(rowPrefix));
         if (status != PassStatus.ALL) {
-            filters.add(new SingleColumnValueFilter(
+            SingleColumnValueFilter filter = new SingleColumnValueFilter(
                     Constants.PassTable.FAMILY_I.getBytes(),
                     Constants.PassTable.CON_DATE.getBytes(),
-                    status == PassStatus.UNUSED ? CompareOperator.EQUAL : CompareOperator.NOT_EQUAL,
-                    Bytes.toBytes("-1")
-            ));
+                    status == PassStatus.UNUSED ? CompareFilter.CompareOp.EQUAL : CompareFilter.CompareOp.NOT_EQUAL,
+                    new NullComparator()
+            );
+            filter.setFilterIfMissing(status != PassStatus.UNUSED);
+            filters.add(filter);
         }
-        Scan scan = new Scan();
-        scan.setFilter(new FilterList(filters));
 
-
-        List<Pass> passes = hbaseTemplate.find(Constants.PassTable.TABLE_NAME, scan, new PassRowMapper());
+        List<Pass> passes = hBaseService.searchAllByFilters(Constants.PassTable.TABLE_NAME, filters, Pass.class);
         Map<String, PassTemplate> templateMap = buildPassTemplateMap(passes);
         Map<Integer, Merchants> merchantsMap = buildMerchantsMap(new ArrayList<>(templateMap.values()));
 

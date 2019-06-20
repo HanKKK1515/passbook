@@ -7,11 +7,13 @@ public class Constants {
     /** 商户优惠券Kafka Topic */
     public static final String TEMPLATE_TOPIC = "merchants-template";
     /** token文件存储路径 */
-    public static final String TOKEN_DIR = "/tmp/token";
+    public static final String TOKEN_DIR = "C:\\tmp\\token";
     /** 已使用的token文件名后缀 */
     public static final String USED_TOKEN_SUFFIX = "_";
     /** 用户数的redis key */
     public static final String USER_COUNT_REDIS_KEY = "HPassBook-user-count";
+    /** 日期格式 */
+    public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     /**
      * <h2>user hbase table</h2>
@@ -53,7 +55,7 @@ public class Constants {
         /** 优惠券详细信息 */
         public static final String DESC = "desc";
         /** 优惠券是否有token */
-        public static final String HAS_TOKEN = "has_token";
+        public static final String HAS_TOKEN = "hasToken";
         /** 优惠券背景色 */
         public static final String BACKGROUND = "background";
 
@@ -76,15 +78,15 @@ public class Constants {
         /** 信息列簇 */
         public static final String FAMILY_I = "i";
         /** 用户id */
-        public static final String USER_ID = "user_id";
+        public static final String USER_ID = "userId";
         /** 优惠券id */
-        public static final String TEMPLATE_ID = "template_id";
+        public static final String TEMPLATE_ID = "templateId";
         /** 优惠券识别码 */
         public static final String TOKEN = "token";
         /** 领取时间 */
-        public static final String ASSIGNED_DATE = "assigned_date";
+        public static final String ASSIGNED_DATE = "assignedDate";
         /** 消费时间 */
-        public static final String CON_DATE = "con_date";
+        public static final String CON_DATE = "conDate";
     }
 
     /**
@@ -96,11 +98,11 @@ public class Constants {
         /** 信息列簇 */
         public static final String FAMILY_I = "i";
         /** 用户id */
-        public static final String USER_ID = "user_id";
+        public static final String USER_ID = "userId";
         /** 评论/反馈类型 */
         public static final String TYPE = "type";
         /** passtemplate rowkey,如果是app评论，则是-1 */
-        public static final String TEMPLATE_ID = "template_id";
+        public static final String TEMPLATE_ID = "templateId";
         /** 评论内容 */
         public static final String COMMENT = "comment";
     }

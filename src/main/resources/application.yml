@@ -11,43 +11,27 @@ spring:
       group-id: passbook
     listener:
       concurrency: 4
-
-  #  data:
-  #    hbase:
-  #      quorum: 192.168.142.101:2181,192.168.142.102:2181,192.168.142.103:2181
-  #      rootDir: hdfs://192.168.142.101:9000
-  #      nodeParent: /hbase
-
   jpa:
+    show-sql: true
     open-in-view: false
   redis:
     cluster:
       nodes:
-    - 192.168.142.101:7001
-    - 192.168.142.101:7002
-    - 192.168.142.102:7003
-    - 192.168.142.102:7004
-    - 192.168.142.103:7005
-    - 192.168.142.103:7006
-#    host: 192.168.142.101
-#    port: 6379
+      - 192.168.142.101:7001
+      - 192.168.142.101:7002
+      - 192.168.142.102:7003
+      - 192.168.142.102:7004
+      - 192.168.142.103:7005
+      - 192.168.142.103:7006
 
 hbase:
   zookeeper:
     quorum: 192.168.142.101,192.168.142.102,192.168.142.103
     property:
       clientPort: 2181
-
 zookeeper:
   znode:
     parent: /hbase
-
-    #hbase:
-    #  config:
-    #    hbase.zookeeper.quorum: 192.168.142.101,192.168.142.102,192.168.142.103
-    #    hbase.zookeeper.property.clientPort: 2181
-    #    hbase.zookeeper.znode: /hbase
-    #    fs.defaultFS: hdfs://server101:9000
 
 server:
   port: 8082

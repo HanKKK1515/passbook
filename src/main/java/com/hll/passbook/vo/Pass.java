@@ -1,5 +1,7 @@
 package com.hll.passbook.vo;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.hll.passbook.constant.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,8 +28,10 @@ public class Pass {
     private String token;
 
     /** 领取日期 */
+    @JSONField(format = Constants.DATE_FORMAT)
     private Date assignedDate;
 
     /** 消费日期，不为空则代表已经被消费 */
+    @JSONField(format = Constants.DATE_FORMAT)
     private Date conDate;
 }

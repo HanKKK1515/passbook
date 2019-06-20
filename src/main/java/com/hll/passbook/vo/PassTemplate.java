@@ -1,5 +1,7 @@
 package com.hll.passbook.vo;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.hll.passbook.constant.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,7 +31,9 @@ public class PassTemplate {
     /** 优惠券最大个数限制，无限制为-1 */
     private Long limit;
     /** 优惠券开始时间 */
+    @JSONField(format = Constants.DATE_FORMAT)
     private Date start;
     /** 优惠券结束时间 */
+    @JSONField(format = Constants.DATE_FORMAT)
     private Date end;
 }
